@@ -1,225 +1,335 @@
-/**
- * KUPEDES Loan Calculator
- * Calculates loan schedules based on Pegadaian's KUPEDES loan product
- */
-
 export type PaymentPattern = 'REGULER' | 'SEKALI_BAYAR' | 'BERJANGKA';
+export type BerjangkaType = 3 | 4 | 6;
 
-interface LoanRateTable {
+interface RateConfig {
   minAmount: number;
   maxAmount: number;
-  rate: number;
-}
-
-const LOAN_RATE_TABLES: Record<PaymentPattern, LoanRateTable[]> = {
-  REGULER: [
-    { minAmount: 0, maxAmount: 10_000_000, rate: 1.5 },
-    { minAmount: 10_000_001, maxAmount: 25_000_000, rate: 1.5 },
-    { minAmount: 25_000_001, maxAmount: 50_000_000, rate: 1.4 },
-    { minAmount: 50_000_001, maxAmount: 100_000_000, rate: 1.3 },
-    { minAmount: 100_000_001, maxAmount: 200_000_000, rate: 1.2 },
-    { minAmount: 200_000_001, maxAmount: Infinity, rate: 1.1 },
-  ],
-  SEKALI_BAYAR: [
-    { minAmount: 0, maxAmount: 10_000_000, rate: 8 },
-    { minAmount: 10_000_001, maxAmount: 25_000_000, rate: 7.5 },
-    { minAmount: 25_000_001, maxAmount: 50_000_000, rate: 7 },
-    { minAmount: 50_000_001, maxAmount: 100_000_000, rate: 6.5 },
-    { minAmount: 100_000_001, maxAmount: 200_000_000, rate: 6 },
-    { minAmount: 200_000_001, maxAmount: Infinity, rate: 5.5 },
-  ],
-  BERJANGKA: [
-    { minAmount: 0, maxAmount: 10_000_000, rate: 1.2 },
-    { minAmount: 10_000_001, maxAmount: 25_000_000, rate: 1.15 },
-    { minAmount: 25_000_001, maxAmount: 50_000_000, rate: 1.1 },
-    { minAmount: 50_000_001, maxAmount: 100_000_000, rate: 1.05 },
-    { minAmount: 100_000_001, maxAmount: 200_000_000, rate: 1.0 },
-    { minAmount: 200_000_001, maxAmount: Infinity, rate: 0.95 },
-  ],
-};
-
-/**
- * Get the loan rate based on amount and payment pattern
- */
-export function getLoanRate(amount: number, pattern: PaymentPattern): number {
-  const rates = LOAN_RATE_TABLES[pattern];
-  const rateTable = rates.find(
-    (r) => amount >= r.minAmount && amount <= r.maxAmount
-  );
-  return rateTable ? rateTable.rate : rates[rates.length - 1].rate;
-}
-
-/**
- * Calculate provisi (administration fee) based on loan amount
- * Typically 2% of loan amount, capped at a maximum
- */
-export function calculateProvisi(amount: number): number {
-  return Math.min(amount * 0.02, amount * 0.02); // 2% of loan amount
-}
-
-/**
- * Calculate sewa modal (modal fee) - flat rate based on tenor
- * Rp 25,000 per month
- */
-export function calculateSewaModal(tenor: number): number {
-  return tenor * 25_000;
-}
-
-/**
- * REGULER payment pattern: monthly installments with interest
- * Formula: Monthly = Principal / Tenor + (Remaining Balance × Monthly Rate)
- */
-export function calculateReguler(
-  amount: number,
-  tenor: number,
-  annualRate: number
-): { schedule: Array<{ month: number; payment: number; interest: number; principal: number; balance: number }>; totalPayment: number } {
-  const monthlyRate = annualRate / 100 / 12;
-  const principal = amount;
-  let balance = principal;
-  const monthlyPrincipal = principal / tenor;
-  const schedule = [];
-  let totalPayment = 0;
-
-  for (let month = 1; month <= tenor; month++) {
-    const interestPayment = balance * monthlyRate;
-    const principalPayment = monthlyPrincipal;
-    const monthlyPayment = principalPayment + interestPayment;
-    balance -= principalPayment;
-    totalPayment += monthlyPayment;
-
-    schedule.push({
-      month,
-      payment: Math.round(monthlyPayment),
-      interest: Math.round(interestPayment),
-      principal: Math.round(principalPayment),
-      balance: Math.max(0, Math.round(balance)),
-    });
-  }
-
-  return { schedule, totalPayment: Math.round(totalPayment) };
-}
-
-/**
- * SEKALI_BAYAR (Lump Sum) payment pattern: full payment at end
- * Interest calculated upfront on full principal
- */
-export function calculateSekaliBAyar(
-  amount: number,
-  tenor: number,
-  annualRate: number
-): { finalPayment: number; totalInterest: number } {
-  // Tenor in months, convert to years for interest calculation
-  const years = tenor / 12;
-  const totalInterest = amount * (annualRate / 100) * years;
-  const finalPayment = amount + totalInterest;
-
-  return {
-    finalPayment: Math.round(finalPayment),
-    totalInterest: Math.round(totalInterest),
+  admin: number;
+  provisi: number;
+  rates: {
+    [key: number]: number;
   };
 }
 
-/**
- * BERJANGKA (Tiered) payment pattern: variable payments based on timeline
- * Payments can vary (typically lower early, higher later or vice versa)
- */
-export function calculateBerjangka(
+interface BerjangkaConfig {
+  minAmount: number;
+  maxAmount: number;
+  admin: number;
+  provisi: number;
+  berjangka3?: { [tenor: number]: number };
+  berjangka4?: { [tenor: number]: number };
+  berjangka6?: { [tenor: number]: number };
+}
+
+// REGULER pattern rates
+const REGULER_RATES: RateConfig[] = [
+  {
+    minAmount: 20.1e6,
+    maxAmount: 25e6,
+    admin: 50000,
+    provisi: 0,
+    rates: { 12: 1.20, 18: 1.25, 24: 1.25, 36: 1.25, 48: 1.29, 60: 1.33 },
+  },
+  {
+    minAmount: 25.1e6,
+    maxAmount: 50e6,
+    admin: 100000,
+    provisi: 0,
+    rates: { 12: 1.20, 18: 1.25, 24: 1.25, 36: 1.25, 48: 1.29, 60: 1.33 },
+  },
+  {
+    minAmount: 50.1e6,
+    maxAmount: 100e6,
+    admin: 150000,
+    provisi: 1,
+    rates: { 12: 1.00, 18: 1.04, 24: 1.04, 36: 1.04, 48: 1.07, 60: 1.10 },
+  },
+  {
+    minAmount: 100.1e6,
+    maxAmount: 150e6,
+    admin: 200000,
+    provisi: 1,
+    rates: { 12: 0.91, 18: 0.90, 24: 0.93, 36: 0.93, 48: 0.95, 60: 0.97 },
+  },
+  {
+    minAmount: 150.1e6,
+    maxAmount: 200e6,
+    admin: 250000,
+    provisi: 1,
+    rates: { 12: 0.91, 18: 0.90, 24: 0.93, 36: 0.93, 48: 0.95, 60: 0.97 },
+  },
+  {
+    minAmount: 200.1e6,
+    maxAmount: 250e6,
+    admin: 250000,
+    provisi: 1,
+    rates: { 12: 0.91, 18: 0.90, 24: 0.93, 36: 0.93, 48: 0.95, 60: 0.97 },
+  },
+  {
+    minAmount: 250.1e6,
+    maxAmount: 500e6,
+    admin: 450000,
+    provisi: 0.75,
+    rates: { 12: 0.91, 18: 0.90, 24: 0.93, 36: 0.93, 48: 0.95, 60: 0.97 },
+  },
+];
+
+// SEKALI BAYAR pattern rates
+const SEKALI_BAYAR_RATES: RateConfig[] = [
+  {
+    minAmount: 20.1e6,
+    maxAmount: 50e6,
+    admin: 75000,
+    provisi: 0,
+    rates: { 3: 6.38, 4: 8.50, 6: 12.75 },
+  },
+  {
+    minAmount: 50.1e6,
+    maxAmount: 100e6,
+    admin: 150000,
+    provisi: 1,
+    rates: { 3: 5.38, 4: 7.17, 6: 10.75 },
+  },
+  {
+    minAmount: 100.1e6,
+    maxAmount: 250e6,
+    admin: 225000,
+    provisi: 1,
+    rates: { 3: 4.88, 4: 6.50, 6: 9.75 },
+  },
+  {
+    minAmount: 250.1e6,
+    maxAmount: 500e6,
+    admin: 450000,
+    provisi: 0.75,
+    rates: { 3: 4.88, 4: 6.50, 6: 9.75 },
+  },
+];
+
+// BERJANGKA pattern rates
+const BERJANGKA_RATES: BerjangkaConfig[] = [
+  {
+    minAmount: 20.1e6,
+    maxAmount: 50e6,
+    admin: 75000,
+    provisi: 0,
+    berjangka3: { 12: 1.30, 18: 1.31, 24: 1.33, 36: 1.38 },
+    berjangka4: { 12: 1.32, 24: 1.35, 36: 1.40 },
+    berjangka6: { 12: 1.40, 18: 1.41, 24: 1.42, 36: 1.47 },
+  },
+  {
+    minAmount: 50.1e6,
+    maxAmount: 100e6,
+    admin: 150000,
+    provisi: 1,
+    berjangka3: { 12: 1.15, 18: 1.16, 24: 1.18, 36: 1.23 },
+    berjangka4: { 12: 1.22, 24: 1.25, 36: 1.30 },
+    berjangka6: { 12: 1.37, 18: 1.38, 24: 1.39, 36: 1.44 },
+  },
+  {
+    minAmount: 100.1e6,
+    maxAmount: 150e6,
+    admin: 200000,
+    provisi: 1,
+    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
+    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
+    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+  },
+  {
+    minAmount: 150.1e6,
+    maxAmount: 200e6,
+    admin: 250000,
+    provisi: 1,
+    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
+    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
+    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+  },
+  {
+    minAmount: 200.1e6,
+    maxAmount: 250e6,
+    admin: 250000,
+    provisi: 1,
+    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
+    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
+    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+  },
+  {
+    minAmount: 250.1e6,
+    maxAmount: 500e6,
+    admin: 450000,
+    provisi: 0.75,
+    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
+    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
+    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+  },
+];
+
+function findRateConfig(
   amount: number,
-  tenor: number,
-  annualRate: number
-): { schedule: Array<{ period: number; payment: number; description: string }>; totalPayment: number } {
-  const monthlyRate = annualRate / 100 / 12;
-  const principal = amount;
-  
-  // Divide tenor into 3 periods
-  const period1Months = Math.floor(tenor / 3);
-  const period2Months = Math.floor(tenor / 3);
-  const period3Months = tenor - period1Months - period2Months;
-
-  let balance = principal;
-  const schedule = [];
-  let totalPayment = 0;
-
-  const periods = [
-    { months: period1Months, name: 'Period 1' },
-    { months: period2Months, name: 'Period 2' },
-    { months: period3Months, name: 'Period 3' },
-  ];
-
-  let monthCount = 0;
-  for (const period of periods) {
-    let periodPayment = 0;
-    for (let i = 0; i < period.months; i++) {
-      monthCount++;
-      const monthlyPrincipal = principal / tenor;
-      const interestPayment = balance * monthlyRate;
-      const monthlyPayment = monthlyPrincipal + interestPayment;
-      balance -= monthlyPrincipal;
-      periodPayment += monthlyPayment;
+  rates: RateConfig[]
+): RateConfig | null {
+  for (const config of rates) {
+    if (amount > config.minAmount && amount <= config.maxAmount) {
+      return config;
     }
-    periodPayment = Math.round(periodPayment);
-    totalPayment += periodPayment;
-
-    schedule.push({
-      period: period.months,
-      payment: periodPayment,
-      description: `${period.months} months`,
-    });
   }
+  return null;
+}
 
-  return { schedule, totalPayment: Math.round(totalPayment) };
+function findBerjangkaConfig(
+  amount: number,
+  rates: BerjangkaConfig[]
+): BerjangkaConfig | null {
+  for (const config of rates) {
+    if (amount > config.minAmount && amount <= config.maxAmount) {
+      return config;
+    }
+  }
+  return null;
 }
 
 export interface LoanCalculationResult {
-  loanAmount: number;
-  tenor: number;
-  pattern: PaymentPattern;
-  annualRate: number;
+  angsuran: number;
+  adminFee: number;
   provisi: number;
   sewaModal: number;
-  totalFees: number;
-  netLoanAmount: number;
-  details: {
-    reguler?: ReturnType<typeof calculateReguler>;
-    sekaliBayar?: ReturnType<typeof calculateSekaliBAyar>;
-    berjangka?: ReturnType<typeof calculateBerjangka>;
-  };
+  total: number;
+  interestRate: number;
+  details?: string;
 }
 
-/**
- * Main calculation function
- */
-export function calculateLoan(
+export function getAvailableTenors(pattern: PaymentPattern): number[] {
+  switch (pattern) {
+    case 'REGULER':
+      return [12, 18, 24, 36, 48, 60];
+    case 'SEKALI_BAYAR':
+      return [3, 4, 6];
+    case 'BERJANGKA':
+      return [12, 18, 24, 36];
+    default:
+      return [];
+  }
+}
+
+export function getAvailableBerjangkaTypes(
   loanAmount: number,
-  tenor: number,
-  pattern: PaymentPattern
-): LoanCalculationResult {
-  const annualRate = getLoanRate(loanAmount, pattern);
-  const provisi = calculateProvisi(loanAmount);
-  const sewaModal = calculateSewaModal(tenor);
-  const totalFees = provisi + sewaModal;
-  const netLoanAmount = loanAmount - totalFees;
+  tenor: number
+): BerjangkaType[] {
+  const config = findBerjangkaConfig(loanAmount, BERJANGKA_RATES);
+  if (!config) return [];
 
-  const details: LoanCalculationResult['details'] = {};
+  const available: BerjangkaType[] = [];
 
-  if (pattern === 'REGULER') {
-    details.reguler = calculateReguler(loanAmount, tenor, annualRate);
-  } else if (pattern === 'SEKALI_BAYAR') {
-    details.sekaliBayar = calculateSekaliBAyar(loanAmount, tenor, annualRate);
-  } else if (pattern === 'BERJANGKA') {
-    details.berjangka = calculateBerjangka(loanAmount, tenor, annualRate);
+  if (config.berjangka3 && config.berjangka3[tenor] !== undefined) {
+    available.push(3);
+  }
+  if (config.berjangka4 && config.berjangka4[tenor] !== undefined) {
+    available.push(4);
+  }
+  if (config.berjangka6 && config.berjangka6[tenor] !== undefined) {
+    available.push(6);
   }
 
-  return {
-    loanAmount,
-    tenor,
-    pattern,
-    annualRate,
-    provisi,
-    sewaModal,
-    totalFees,
-    netLoanAmount,
-    details,
-  };
+  return available;
+}
+
+export function calculateLoan(
+  loanAmount: number,
+  pattern: PaymentPattern,
+  tenor: number,
+  berjangkaType?: BerjangkaType
+): LoanCalculationResult {
+  if (pattern === 'REGULER') {
+    const config = findRateConfig(loanAmount, REGULER_RATES);
+    if (!config) throw new Error('Loan amount not in valid range');
+
+    const rate = config.rates[tenor];
+    if (rate === undefined)
+      throw new Error(`Tenor ${tenor} not available for this pattern`);
+
+    const sewaModal = (loanAmount * rate * tenor) / 100;
+    const adminFee = config.admin;
+    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
+    const totalCost = loanAmount + sewaModal + adminFee + provisi;
+    const angsuran = totalCost / tenor;
+
+    return {
+      angsuran: Math.round(angsuran),
+      adminFee,
+      provisi: Math.round(provisi),
+      sewaModal: Math.round(sewaModal),
+      total: Math.round(totalCost),
+      interestRate: rate,
+    };
+  } else if (pattern === 'SEKALI_BAYAR') {
+    const config = findRateConfig(loanAmount, SEKALI_BAYAR_RATES);
+    if (!config) throw new Error('Loan amount not in valid range');
+
+    const rate = config.rates[tenor];
+    if (rate === undefined)
+      throw new Error(`Tenor ${tenor} not available for this pattern`);
+
+    const sewaModal = (loanAmount * rate) / 100;
+    const adminFee = config.admin;
+    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
+    const total = loanAmount + sewaModal + adminFee + provisi;
+
+    return {
+      angsuran: Math.round(total),
+      adminFee,
+      provisi: Math.round(provisi),
+      sewaModal: Math.round(sewaModal),
+      total: Math.round(total),
+      interestRate: rate,
+    };
+  } else if (pattern === 'BERJANGKA') {
+    if (!berjangkaType) throw new Error('Berjangka type must be specified');
+
+    const config = findBerjangkaConfig(loanAmount, BERJANGKA_RATES);
+    if (!config) throw new Error('Loan amount not in valid range');
+
+    let rateTable: { [tenor: number]: number } | undefined;
+    if (berjangkaType === 3) {
+      rateTable = config.berjangka3;
+    } else if (berjangkaType === 4) {
+      rateTable = config.berjangka4;
+    } else if (berjangkaType === 6) {
+      rateTable = config.berjangka6;
+    }
+
+    if (!rateTable)
+      throw new Error('Berjangka type not available for this amount');
+
+    const rate = rateTable[tenor];
+    if (rate === undefined)
+      throw new Error(`Tenor ${tenor} not available for this pattern`);
+
+    const sewaModal = (loanAmount * rate * tenor) / 100;
+    const adminFee = config.admin;
+    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
+    const totalCost = loanAmount + sewaModal + adminFee + provisi;
+    const periodCount = tenor / berjangkaType;
+    const angsuran = totalCost / periodCount;
+
+    return {
+      angsuran: Math.round(angsuran),
+      adminFee,
+      provisi: Math.round(provisi),
+      sewaModal: Math.round(sewaModal),
+      total: Math.round(totalCost),
+      interestRate: rate,
+      details: `Per ${berjangkaType} bulan (${periodCount} periode)`,
+    };
+  }
+
+  throw new Error('Invalid pattern');
+}
+
+export function formatRupiah(value: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 }
