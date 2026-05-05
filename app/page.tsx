@@ -315,28 +315,7 @@ export default function Home() {
                       {result.interestRate}%
                     </span>
                   </div>
-                  {result.adminFee > 0 && (
-                    <div className="flex justify-between">
-                      <span style={{ color: '#666666' }}>Biaya Admin:</span>
-                      <span
-                        className="font-semibold"
-                        style={{ color: '#00843D' }}
-                      >
-                        {formatRupiah(result.adminFee)}
-                      </span>
-                    </div>
-                  )}
-                  {result.provisi > 0 && (
-                    <div className="flex justify-between">
-                      <span style={{ color: '#666666' }}>Provisi:</span>
-                      <span
-                        className="font-semibold"
-                        style={{ color: '#00843D' }}
-                      >
-                        {formatRupiah(result.provisi)}
-                      </span>
-                    </div>
-                  )}
+
                   {pattern !== 'SEKALI_BAYAR' && (
                     <div className="flex justify-between">
                       <span style={{ color: '#666666' }}>Sewa Modal:</span>
