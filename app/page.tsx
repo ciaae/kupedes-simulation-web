@@ -276,6 +276,72 @@ export default function Home() {
 
           {/* Results Section */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Info Cards */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card
+                className="p-4"
+                style={{
+                  backgroundColor: '#e8f5e9',
+                  borderColor: '#c8e6c9',
+                }}
+              >
+                <h3
+                  className="mb-2 text-sm font-semibold"
+                  style={{ color: '#00843D' }}
+                >
+                  Sewa Modal
+                </h3>
+                <p
+                  className="text-xs mb-2"
+                  style={{ color: '#666666' }}
+                >
+                  REGULER & BERJANGKA = per bulan
+                </p>
+              </Card>
+
+              <Card
+                className="p-4"
+                style={{
+                  backgroundColor: '#e8f5e9',
+                  borderColor: '#c8e6c9',
+                }}
+              >
+                <h3
+                  className="mb-2 text-sm font-semibold"
+                  style={{ color: '#00843D' }}
+                >
+                  Provisi
+                </h3>
+                <p
+                  className="text-xs"
+                  style={{ color: '#666666' }}
+                >
+                  Untuk pinjaman &gt; Rp 50 juta
+                </p>
+              </Card>
+            </div>
+
+            <Card
+              className="p-4"
+              style={{
+                backgroundColor: '#e8f5e9',
+                borderColor: '#c8e6c9',
+              }}
+            >
+              <h3
+                className="mb-2 text-sm font-semibold"
+                style={{ color: '#00843D' }}
+              >
+                Periode Berjangka
+              </h3>
+              <p
+                className="text-xs"
+                style={{ color: '#666666' }}
+              >
+                Sewa modal SEKALI BAYAR = flat dari pokok
+              </p>
+            </Card>
+
             {/* Calculation Results */}
             {result && (
               <Card
