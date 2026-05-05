@@ -363,36 +363,6 @@ export function calculateLoan(
     };
   }
 
-    if (!rateTable)
-      throw new Error('Berjangka type not available for this amount');
-
-    const rate = rateTable[tenor];
-    if (rate === undefined)
-      throw new Error(`Tenor ${tenor} not available for this pattern`);
-
-    // Sewa Modal per bulan (same as REGULER)
-    const sewaModalPerBulan = (loanAmount * rate) / 100;
-    const adminFee = config.admin;
-    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
-    
-    // Angsuran per periode = sewa modal per bulan × jumlah bulan per periode
-    const periodMonths = berjangkaType;
-    const angsuranPerPeriode = sewaModalPerBulan * periodMonths;
-    
-    const totalSewaModal = sewaModalPerBulan * tenor;
-    const totalCost = loanAmount + totalSewaModal + adminFee + provisi;
-
-    return {
-      angsuran: Math.round(angsuranPerPeriode),
-      adminFee,
-      provisi: Math.round(provisi),
-      sewaModal: Math.round(totalSewaModal),
-      total: Math.round(totalCost),
-      interestRate: rate,
-      details: `Per ${berjangkaType} bulan (${tenor / periodMonths} periode)`,
-    };
-  }
-
   throw new Error('Invalid pattern');
 }
 
