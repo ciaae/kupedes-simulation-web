@@ -366,34 +366,6 @@ export function calculateLoan(
   throw new Error('Invalid pattern');
 }
 
-    if (!rateTable)
-      throw new Error('Berjangka type not available for this amount');
-
-    const rate = rateTable[tenor];
-    if (rate === undefined)
-      throw new Error(`Tenor ${tenor} not available for this pattern`);
-
-    const sewaModal = (loanAmount * rate * tenor) / 100;
-    const adminFee = config.admin;
-    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
-    const totalCost = loanAmount + sewaModal + adminFee + provisi;
-    const periodCount = tenor / berjangkaType;
-    const angsuran = totalCost / periodCount;
-
-    return {
-      angsuran: Math.round(angsuran),
-      adminFee,
-      provisi: Math.round(provisi),
-      sewaModal: Math.round(sewaModal),
-      total: Math.round(totalCost),
-      interestRate: rate,
-      details: `Per ${berjangkaType} bulan (${periodCount} periode)`,
-    };
-  }
-
-  throw new Error('Invalid pattern');
-}
-
 export function formatRupiah(value: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
