@@ -315,48 +315,31 @@ export default function Home() {
                       {result.interestRate}%
                     </span>
                   </div>
-                  {result.adminFee > 0 && (
+
+                  {pattern !== 'SEKALI_BAYAR' && (
                     <div className="flex justify-between">
-                      <span style={{ color: '#666666' }}>Biaya Admin:</span>
+                      <span style={{ color: '#666666' }}>Sewa Modal:</span>
                       <span
                         className="font-semibold"
                         style={{ color: '#00843D' }}
                       >
-                        {formatRupiah(result.adminFee)}
+                        {formatRupiah(result.sewaModal)}
                       </span>
                     </div>
                   )}
-                  {result.provisi > 0 && (
-                    <div className="flex justify-between">
-                      <span style={{ color: '#666666' }}>Provisi:</span>
-                      <span
-                        className="font-semibold"
-                        style={{ color: '#00843D' }}
-                      >
-                        {formatRupiah(result.provisi)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span style={{ color: '#666666' }}>Sewa Modal:</span>
-                    <span
-                      className="font-semibold"
-                      style={{ color: '#00843D' }}
+                  {pattern !== 'SEKALI_BAYAR' && (
+                    <div
+                      className="flex justify-between p-3 rounded font-bold text-lg"
+                      style={{
+                        backgroundColor: '#e8f5e9',
+                        color: '#00843D',
+                      }}
                     >
-                      {formatRupiah(result.sewaModal)}
-                    </span>
-                  </div>
-                  <div
-                    className="flex justify-between p-3 rounded font-bold text-lg"
-                    style={{
-                      backgroundColor: '#e8f5e9',
-                      color: '#00843D',
-                    }}
-                  >
-                    <span>Angsuran {pattern === 'REGULER' ? 'per Bulan:' : pattern === 'SEKALI_BAYAR' ? 'Total:' : 'per Periode:'}
-                    </span>
-                    <span>{formatRupiah(result.angsuran)}</span>
-                  </div>
+                      <span>Angsuran {pattern === 'REGULER' ? 'per Bulan:' : 'per Periode:'}
+                      </span>
+                      <span>{formatRupiah(result.angsuran)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Total Summary */}
