@@ -78,8 +78,15 @@ const REGULER_RATES: RateConfig[] = [
 const SEKALI_BAYAR_RATES: RateConfig[] = [
   {
     minAmount: 20.1e6,
+    maxAmount: 25e6,
+    admin: 50000,
+    provisi: 0,
+    rates: { 3: 6.38, 4: 8.50, 6: 12.75 },
+  },
+  {
+    minAmount: 25.1e6,
     maxAmount: 50e6,
-    admin: 75000,
+    admin: 100000,
     provisi: 0,
     rates: { 3: 6.38, 4: 8.50, 6: 12.75 },
   },
@@ -92,8 +99,22 @@ const SEKALI_BAYAR_RATES: RateConfig[] = [
   },
   {
     minAmount: 100.1e6,
+    maxAmount: 150e6,
+    admin: 200000,
+    provisi: 1,
+    rates: { 3: 4.88, 4: 6.50, 6: 9.75 },
+  },
+  {
+    minAmount: 150.1e6,
+    maxAmount: 200e6,
+    admin: 250000,
+    provisi: 1,
+    rates: { 3: 4.88, 4: 6.50, 6: 9.75 },
+  },
+  {
+    minAmount: 200.1e6,
     maxAmount: 250e6,
-    admin: 225000,
+    admin: 250000,
     provisi: 1,
     rates: { 3: 4.88, 4: 6.50, 6: 9.75 },
   },
@@ -110,12 +131,21 @@ const SEKALI_BAYAR_RATES: RateConfig[] = [
 const BERJANGKA_RATES: BerjangkaConfig[] = [
   {
     minAmount: 20.1e6,
-    maxAmount: 50e6,
-    admin: 75000,
+    maxAmount: 25e6,
+    admin: 50000,
     provisi: 0,
-    berjangka3: { 12: 1.30, 18: 1.31, 24: 1.33, 36: 1.38 },
-    berjangka4: { 12: 1.32, 24: 1.35, 36: 1.40 },
-    berjangka6: { 12: 1.40, 18: 1.41, 24: 1.42, 36: 1.47 },
+    berjangka3: { 12: 1.37, 18: 1.39, 24: 1.41, 36: 1.47 },
+    berjangka4: { 12: 1.46, 24: 1.49, 36: 1.55 },
+    berjangka6: { 12: 1.63, 18: 1.64, 24: 1.65, 36: 1.71 },
+  },
+  {
+    minAmount: 25.1e6,
+    maxAmount: 50e6,
+    admin: 100000,
+    provisi: 0,
+    berjangka3: { 12: 1.37, 18: 1.39, 24: 1.41, 36: 1.47 },
+    berjangka4: { 12: 1.46, 24: 1.49, 36: 1.55 },
+    berjangka6: { 12: 1.63, 18: 1.64, 24: 1.65, 36: 1.71 },
   },
   {
     minAmount: 50.1e6,
@@ -131,36 +161,36 @@ const BERJANGKA_RATES: BerjangkaConfig[] = [
     maxAmount: 150e6,
     admin: 200000,
     provisi: 1,
-    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
-    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
-    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+    berjangka3: { 12: 1.04, 18: 1.05, 24: 1.06, 36: 1.10 },
+    berjangka4: { 12: 1.11, 24: 1.13, 36: 1.16 },
+    berjangka6: { 12: 1.24, 18: 1.25, 24: 1.25, 36: 1.29 },
   },
   {
     minAmount: 150.1e6,
     maxAmount: 200e6,
     admin: 250000,
     provisi: 1,
-    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
-    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
-    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+    berjangka3: { 12: 1.04, 18: 1.05, 24: 1.06, 36: 1.10 },
+    berjangka4: { 12: 1.11, 24: 1.13, 36: 1.16 },
+    berjangka6: { 12: 1.24, 18: 1.25, 24: 1.25, 36: 1.29 },
   },
   {
     minAmount: 200.1e6,
     maxAmount: 250e6,
     admin: 250000,
     provisi: 1,
-    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
-    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
-    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+    berjangka3: { 12: 1.04, 18: 1.05, 24: 1.06, 36: 1.10 },
+    berjangka4: { 12: 1.11, 24: 1.13, 36: 1.16 },
+    berjangka6: { 12: 1.24, 18: 1.25, 24: 1.25, 36: 1.29 },
   },
   {
     minAmount: 250.1e6,
     maxAmount: 500e6,
     admin: 450000,
     provisi: 0.75,
-    berjangka3: { 12: 1.05, 18: 1.06, 24: 1.08, 36: 1.13 },
-    berjangka4: { 12: 1.12, 24: 1.15, 36: 1.20 },
-    berjangka6: { 12: 1.27, 18: 1.28, 24: 1.29, 36: 1.34 },
+    berjangka3: { 12: 1.04, 18: 1.05, 24: 1.06, 36: 1.10 },
+    berjangka4: { 12: 1.11, 24: 1.13, 36: 1.16 },
+    berjangka6: { 12: 1.24, 18: 1.25, 24: 1.25, 36: 1.29 },
   },
 ];
 
@@ -247,17 +277,20 @@ export function calculateLoan(
     if (rate === undefined)
       throw new Error(`Tenor ${tenor} not available for this pattern`);
 
-    const sewaModal = (loanAmount * rate * tenor) / 100;
+    // Sewa Modal per bulan = (Uang Pinjaman × Sewa Modal % × Tenor) / Tenor = Uang Pinjaman × Sewa Modal %
+    const sewaModalPerBulan = (loanAmount * rate) / 100;
     const adminFee = config.admin;
     const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
-    const totalCost = loanAmount + sewaModal + adminFee + provisi;
-    const angsuran = totalCost / tenor;
+    
+    // Angsuran hanya sewa modal per bulan, tidak termasuk admin dan provisi
+    const totalSewaModal = sewaModalPerBulan * tenor;
+    const totalCost = loanAmount + totalSewaModal + adminFee + provisi;
 
     return {
-      angsuran: Math.round(angsuran),
+      angsuran: Math.round(sewaModalPerBulan),
       adminFee,
       provisi: Math.round(provisi),
-      sewaModal: Math.round(sewaModal),
+      sewaModal: Math.round(totalSewaModal),
       total: Math.round(totalCost),
       interestRate: rate,
     };
@@ -269,17 +302,20 @@ export function calculateLoan(
     if (rate === undefined)
       throw new Error(`Tenor ${tenor} not available for this pattern`);
 
+    // For SEKALI_BAYAR, sewa modal is flat percentage
     const sewaModal = (loanAmount * rate) / 100;
     const adminFee = config.admin;
     const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
-    const total = loanAmount + sewaModal + adminFee + provisi;
+    
+    // Total yang harus dibayar sekaligus
+    const totalPayment = loanAmount + sewaModal + adminFee + provisi;
 
     return {
-      angsuran: Math.round(total),
+      angsuran: Math.round(sewaModal),
       adminFee,
       provisi: Math.round(provisi),
       sewaModal: Math.round(sewaModal),
-      total: Math.round(total),
+      total: Math.round(totalPayment),
       interestRate: rate,
     };
   } else if (pattern === 'BERJANGKA') {
@@ -296,6 +332,39 @@ export function calculateLoan(
     } else if (berjangkaType === 6) {
       rateTable = config.berjangka6;
     }
+
+    if (!rateTable)
+      throw new Error('Berjangka type not available for this amount');
+
+    const rate = rateTable[tenor];
+    if (rate === undefined)
+      throw new Error(`Tenor ${tenor} not available for this pattern`);
+
+    // Sewa Modal per bulan (same as REGULER)
+    const sewaModalPerBulan = (loanAmount * rate) / 100;
+    const adminFee = config.admin;
+    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
+    
+    // Angsuran per periode = sewa modal per bulan × jumlah bulan per periode
+    const periodMonths = berjangkaType;
+    const angsuranPerPeriode = sewaModalPerBulan * periodMonths;
+    
+    const totalSewaModal = sewaModalPerBulan * tenor;
+    const totalCost = loanAmount + totalSewaModal + adminFee + provisi;
+
+    return {
+      angsuran: Math.round(angsuranPerPeriode),
+      adminFee,
+      provisi: Math.round(provisi),
+      sewaModal: Math.round(totalSewaModal),
+      total: Math.round(totalCost),
+      interestRate: rate,
+      details: `Per ${berjangkaType} bulan (${tenor / periodMonths} periode)`,
+    };
+  }
+
+  throw new Error('Invalid pattern');
+}
 
     if (!rateTable)
       throw new Error('Berjangka type not available for this amount');
