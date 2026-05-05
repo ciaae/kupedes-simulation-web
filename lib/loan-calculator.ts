@@ -277,19 +277,19 @@ export function calculateLoan(
     if (rate === undefined)
       throw new Error(`Tenor ${tenor} not available for this pattern`);
 
-    // Sewa Modal per bulan = (Uang Pinjaman × Sewa Modal % × Tenor) / Tenor = Uang Pinjaman × Sewa Modal %
-    const sewaModalPerBulan = (loanAmount * rate) / 100;
+    // Total Sewa Modal = Uang Pinjaman × Sewa Modal % × Tenor / 100
+    // Angsuran per Bulan = (Uang Pinjaman + Total Sewa Modal) / Tenor
+    const totalSewaModal = (loanAmount * rate * tenor) / 100;
     const adminFee = config.admin;
-    const provisi = config.provisi > 0 ? (loanAmount * config.provisi) / 100 : 0;
+    const provusi = config.provusi > 0 ? (loanAmount * config.provusi) / 100 : 0;
     
-    // Angsuran hanya sewa modal per bulan, tidak termasuk admin dan provisi
-    const totalSewaModal = sewaModalPerBulan * tenor;
-    const totalCost = loanAmount + totalSewaModal + adminFee + provisi;
+    const angsuran = (loanAmount + totalSewaModal) / tenor;
+    const totalCost = loanAmount + totalSewaModal + adminFee + provusi;
 
     return {
-      angsuran: Math.round(sewaModalPerBulan),
+      angsuran: Math.round(angsuran),
       adminFee,
-      provisi: Math.round(provisi),
+      provusi: Math.round(provusi),
       sewaModal: Math.round(totalSewaModal),
       total: Math.round(totalCost),
       interestRate: rate,
@@ -332,6 +332,36 @@ export function calculateLoan(
     } else if (berjangkaType === 6) {
       rateTable = config.berjangka6;
     }
+
+    if (!rateTable)
+      throw new Error('Berjangka type not available for this amount');
+
+    const rate = rateTable[tenor];
+    if (rate === undefined)
+      throw new Error(`Tenor ${tenor} not available for this pattern`);
+
+    // Total Sewa Modal = Uang Pinjaman × Sewa Modal % × Tenor / 100
+    const totalSewaModal = (loanAmount * rate * tenor) / 100;
+    const adminFee = config.admin;
+    const provusi = config.provusi > 0 ? (loanAmount * config.provusi) / 100 : 0;
+    
+    // Angsuran per periode = (Uang Pinjaman + Total Sewa Modal) / (Tenor / Periode)
+    const periodMonths = berjangkaType;
+    const periodCount = tenor / periodMonths;
+    const angsuranPerPeriode = (loanAmount + totalSewaModal) / periodCount;
+    
+    const totalCost = loanAmount + totalSewaModal + adminFee + provusi;
+
+    return {
+      angsuran: Math.round(angsuranPerPeriode),
+      adminFee,
+      provusi: Math.round(provusi),
+      sewaModal: Math.round(totalSewaModal),
+      total: Math.round(totalCost),
+      interestRate: rate,
+      details: `Per ${berjangkaType} bulan (${periodCount} periode)`,
+    };
+  }
 
     if (!rateTable)
       throw new Error('Berjangka type not available for this amount');
